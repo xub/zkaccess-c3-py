@@ -713,7 +713,7 @@ class C3:
     ) -> int:
         """Add/update a user in the C3 panel's 'user' table (cmd 0x07).
 
-        Wire, validated live against 192.168.5.46 (see
+        Wire, validated live against <PANEL_IP> (see
         /tmp/opencode/test_setdata_matrix.py and test_setdata_fork_step1.py -
         went from 29 to 30 users, CardNo readable back via GETDATA):
 
@@ -757,14 +757,14 @@ class C3:
     def delete_user(self, card: int) -> None:
         """Not implemented: no delete wire has been validated against the panel yet.
 
-        0x09 / 0x0A / 0x0F were tried against 192.168.5.46 and none of them
+        0x09 / 0x0A / 0x0F were tried against <PANEL_IP> and none of them
         removed a user (see /tmp/opencode/test_setdata_matrix.py,
         delmatrix.log). Do not call this until a working wire is found and
         confirmed via a before/after get_device_data("user") readback.
         """
         raise NotImplementedError(
             "delete_user: no C3 wire for user deletion has been validated yet "
-            "(0x09/0x0A/0x0F all tested against 192.168.5.46 with no effect)."
+            "(0x09/0x0A/0x0F all tested against <PANEL_IP> with no effect)."
         )
 
     def _update_inout_status(self, logs: list[rtlog.RTLogRecord]):

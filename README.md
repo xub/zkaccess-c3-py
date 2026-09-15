@@ -25,7 +25,7 @@ pip install zkaccess-c3 @ git+https://github.com/xub/zkaccess-c3-py.git@main
 ```python
 from zkaccess_c3 import C3
 
-panel = C3("192.168.5.46", port=4370)
+panel = C3("<PANEL_IP>", port=4370)
 panel.connect()
 
 # Read users
