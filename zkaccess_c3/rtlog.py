@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from . import consts
-from c3.utils import C3DateTime
+from .utils import C3DateTime
 
 
 class RTLogRecord(ABC):
