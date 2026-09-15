@@ -27,3 +27,9 @@ classifiers = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["zkaccess_c3"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/zkaccess_c3",
+    "/pyproject.toml",
+]
