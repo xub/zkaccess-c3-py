@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Optional
 
-from c3 import consts, controldevice, crc, rtlog, utils
+from . import consts, controldevice, crc, rtlog, utils
 
 
 @dataclass

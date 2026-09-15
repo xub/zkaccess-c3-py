@@ -1,6 +1,6 @@
 from abc import ABC
 
-from c3 import consts
+from . import consts
 
 
 class ControlDeviceBase(ABC):

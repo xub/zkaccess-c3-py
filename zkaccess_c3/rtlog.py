@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from c3 import consts
+from . import consts
 from c3.utils import C3DateTime
 
 
