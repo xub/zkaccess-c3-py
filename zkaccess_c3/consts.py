@@ -23,6 +23,7 @@ class Command(IntEnum):
     CONTROL = 0x05
     DATATABLE_CFG = 0x06
     GETDATA = 0x08
+    DELETEDATA = 0x09
     RTLOG_BINARY = 0x0B
     DISCOVER = 0x14
     CONNECT_SESSION = 0x76

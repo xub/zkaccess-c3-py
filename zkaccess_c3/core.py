@@ -754,18 +754,49 @@ class C3:
         self._send_receive(0x07, payload)
         return card
 
-    def delete_user(self, card: int) -> None:
-        """Not implemented: no delete wire has been validated against the panel yet.
+    def delete_user(self, card: Optional[int] = None, pin: Optional[int] = None) -> None:
+        """Delete a user from the C3 panel's 'user' table (cmd 0x09).
 
-        0x09 / 0x0A / 0x0F were tried against <PANEL_IP> and none of them
-        removed a user (see /tmp/opencode/test_setdata_matrix.py,
-        delmatrix.log). Do not call this until a working wire is found and
-        confirmed via a before/after get_device_data("user") readback.
+        Wire, validated live against <PANEL_IP> (the user went from 31 to 30
+        users and was confirmed gone via get_device_data("user")):
+
+          cmd     0x09
+          header  = bytes([1, 1, idx])  (table=1 'user', 1 field, idx 1 or 2)
+          key     = bytes([len]) + <value>, little-endian, minimal byte length
+
+        The key is the same per-field ``<size><value>`` encoding used by
+        set_user. By default deletion matches on CardNo (field index 1); if
+        ``pin`` is given, the key matches on Pin (field index 2) instead.
+
+        At least one of ``card`` or ``pin`` must be provided.
+
+        NOTE: earlier attempts at 0x09 failed because the key was built with a
+        wrong size prefix; the panel silently ignores malformed records. The
+        form above was confirmed to delete exactly one matching user.
+
+        Raises ConnectionError if the panel replies with an error.
         """
-        raise NotImplementedError(
-            "delete_user: no C3 wire for user deletion has been validated yet "
-            "(0x09/0x0A/0x0F all tested against <PANEL_IP> with no effect)."
-        )
+        if not self.is_connected():
+            raise ConnectionError("No connection to C3 panel.")
+        if card is None and pin is None:
+            raise ValueError("At least one of card or pin must be given")
+
+        def iv(v: int) -> bytes:
+            if v == 0:
+                return b"\x00"
+            return v.to_bytes((v.bit_length() + 7) // 8, "little")
+
+        if pin is not None:
+            key_field_index = 2
+            key_value = iv(pin)
+        else:
+            key_field_index = 1
+            key_value = iv(card)
+
+        header = bytes([1, 1, key_field_index])
+        payload = header + bytes([len(key_value)]) + key_value
+
+        self._send_receive(consts.Command.DELETEDATA, payload)
 
     def _update_inout_status(self, logs: list[rtlog.RTLogRecord]):
         for log in logs:
