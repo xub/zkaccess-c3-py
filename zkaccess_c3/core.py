@@ -754,6 +754,70 @@ class C3:
         self._send_receive(0x07, payload)
         return card
 
+    def set_user_authorize(
+        self,
+        pin: int,
+        door_ids: Optional[list[int]] = None,
+        timezone_id: int = 1,
+    ) -> None:
+        """Grant a user access to one or more doors (cmd 0x07, table 'userauthorize').
+
+        Wire, validated live against <PANEL_IP>:
+
+          cmd     0x07
+          header  = bytes([2, 3, 1, 2, 3])  (table=2, 3 fields, idx 1..3)
+          record  = <size><value> per field in order: Pin, AuthorizeTimezoneId, AuthorizeDoorId
+
+        Each call writes ONE authorization row. To grant access to multiple doors,
+        either pass a list in ``door_ids`` (one call per door) or call this method
+        once per door.
+
+        Common values: timezone_id=1 means 24/7. door_ids=[1,2,3] for a panel
+        with 2 physical doors + 1 "all doors" aggregate (door 3).
+        """
+        if door_ids is None:
+            door_ids = [1, 2, 3]
+
+        def iv(v: int) -> bytes:
+            if v == 0:
+                return b"\x00"
+            return v.to_bytes((v.bit_length() + 7) // 8, "little")
+
+        if not self.is_connected():
+            raise ConnectionError("No connection to C3 panel.")
+
+        header = bytes([2, 3, 1, 2, 3])  # table 2 (userauthorize), 3 fields, indexes 1,2,3
+        for door_id in door_ids:
+            pin_b = iv(pin)
+            tz_b = iv(timezone_id)
+            door_b = iv(door_id)
+            record = (
+                bytes([len(pin_b)]) + pin_b
+                + bytes([len(tz_b)]) + tz_b
+                + bytes([len(door_b)]) + door_b
+            )
+            payload = header + record
+            self._send_receive(0x07, payload)
+
+    def delete_user_authorize(self, pin: int) -> None:
+        """Remove all door authorizations for a user (cmd 0x09, table 'userauthorize').
+
+        Wire: same key format as delete_user but targeting table 2 (userauthorize),
+        field 1 (Pin).
+        """
+        if not self.is_connected():
+            raise ConnectionError("No connection to C3 panel.")
+
+        def iv(v: int) -> bytes:
+            if v == 0:
+                return b"\x00"
+            return v.to_bytes((v.bit_length() + 7) // 8, "little")
+
+        pin_b = iv(pin)
+        header = bytes([2, 1, 1])  # table 2 (userauthorize), 1 field, index 1 (Pin)
+        payload = header + bytes([len(pin_b)]) + pin_b
+        self._send_receive(consts.Command.DELETEDATA, payload)
+
     def delete_user(self, card: Optional[int] = None, pin: Optional[int] = None) -> None:
         """Delete a user from the C3 panel's 'user' table (cmd 0x09).
 
